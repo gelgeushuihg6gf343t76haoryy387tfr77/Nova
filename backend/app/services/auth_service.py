@@ -34,8 +34,10 @@ def register_user(db: Session, payload: RegisterRequest) -> User:
 
 
 def login_user(db: Session, payload: LoginRequest) -> str:
-    normalized_email = payload.email.strip().lower()
-    user = db.scalar(select(User).where(User.email == normalized_email))
+    identifier = payload.identifier.strip().lower()
+    user = db.scalar(select(User).where(User.email == identifier))
+    if not user:
+        user = db.scalar(select(User).where(User.username == identifier))
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
     return create_access_token(str(user.id))

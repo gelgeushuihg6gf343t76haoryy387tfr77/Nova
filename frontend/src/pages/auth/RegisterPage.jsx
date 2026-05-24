@@ -7,7 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 export default function RegisterPage() {
   const { register, user, loading } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ full_name: "", email: "", password: "" });
+  const [form, setForm] = useState({ full_name: "", email: "", username: "", password: "" });
   const [showPw, setShowPw] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [notify, setNotify] = useState(null);
@@ -51,6 +51,15 @@ export default function RegisterPage() {
           />
         </label>
         <label>
+          Username
+          <input
+            value={form.username}
+            onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))}
+            placeholder="Choose a username (optional, used for login)"
+            disabled={submitting}
+          />
+        </label>
+        <label>
           Email
           <input
             type="email"
@@ -68,7 +77,7 @@ export default function RegisterPage() {
               type={showPw ? "text" : "password"}
               value={form.password}
               onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-              placeholder="Create a password"
+              placeholder="At least 6 characters"
               required
               disabled={submitting}
             />

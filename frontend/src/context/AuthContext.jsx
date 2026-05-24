@@ -37,8 +37,8 @@ export function AuthProvider({ children }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = async (email, password) => {
-    const tokenData = await api.post("/auth/login", { email, password });
+  const login = async (identifier, password) => {
+    const tokenData = await api.post("/auth/login", { identifier, password });
     localStorage.setItem("auth_token", tokenData.access_token);
     await Promise.all([refreshUser(), loadBusinesses()]);
   };

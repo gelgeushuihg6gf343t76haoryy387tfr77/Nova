@@ -6,7 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 
 export default function LoginPage() {
   const { login, user, loading } = useAuth();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -24,11 +24,11 @@ export default function LoginPage() {
     setNotify(null);
     setSubmitting(true);
     try {
-      await login(email.trim().toLowerCase(), password);
+      await login(identifier.trim().toLowerCase(), password);
       navigate("/dashboard");
     } catch (err) {
       const message = err.message === "Invalid credentials"
-        ? "Wrong password, please try again."
+        ? "Wrong email/username or password, please try again."
         : err.message;
       setNotify({ message, tone: "error" });
     } finally {
@@ -43,12 +43,12 @@ export default function LoginPage() {
       <p className="auth-subtitle">Sign in to your business account</p>
       <form onSubmit={submit} className="form-grid">
         <label>
-          Email
+          Email or username
           <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@company.com"
+            type="text"
+            value={identifier}
+            onChange={(e) => setIdentifier(e.target.value)}
+            placeholder="you@company.com or username"
             required
             disabled={submitting}
           />

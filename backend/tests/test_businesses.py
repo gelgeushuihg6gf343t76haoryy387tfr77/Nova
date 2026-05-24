@@ -25,7 +25,7 @@ class TestBusinesses:
     def test_delete_other_users_business(self, client, auth_headers, business_id):
         client2_resp = client.post("/auth/register", json={"email": "other@example.com", "password": "secret123"})
         other_id = client2_resp.json()["id"]
-        other_token_resp = client.post("/auth/login", json={"email": "other@example.com", "password": "secret123"})
+        other_token_resp = client.post("/auth/login", json={"identifier": "other@example.com", "password": "secret123"})
         other_token = other_token_resp.json()["access_token"]
         resp = client.delete(f"/businesses/{business_id}", headers={"Authorization": f"Bearer {other_token}"})
         assert resp.status_code == 404

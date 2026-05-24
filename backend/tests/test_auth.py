@@ -51,7 +51,7 @@ class TestRegister:
 class TestLogin:
     def test_login_success(self, client):
         client.post("/auth/register", json={"email": "login@example.com", "password": "rightpass"})
-        resp = client.post("/auth/login", json={"email": "login@example.com", "password": "rightpass"})
+        resp = client.post("/auth/login", json={"identifier": "login@example.com", "password": "rightpass"})
         assert resp.status_code == 200
         data = resp.json()
         assert "access_token" in data
@@ -59,12 +59,12 @@ class TestLogin:
 
     def test_login_wrong_password(self, client):
         client.post("/auth/register", json={"email": "wrongpw@example.com", "password": "correct"})
-        resp = client.post("/auth/login", json={"email": "wrongpw@example.com", "password": "wrong"})
+        resp = client.post("/auth/login", json={"identifier": "wrongpw@example.com", "password": "wrong"})
         assert resp.status_code == 401
         assert "invalid" in resp.json()["detail"].lower()
 
     def test_login_nonexistent(self, client):
-        resp = client.post("/auth/login", json={"email": "nobody@example.com", "password": "anything"})
+        resp = client.post("/auth/login", json={"identifier": "nobody@example.com", "password": "anything"})
         assert resp.status_code == 401
 
 
@@ -98,7 +98,7 @@ class TestResetCode:
         assert resp2.status_code == 200
         assert resp2.json()["success"] is True
 
-        resp3 = client.post("/auth/login", json={"email": test_user.email, "password": "codePass789"})
+        resp3 = client.post("/auth/login", json={"identifier": test_user.email, "password": "codePass789"})
         assert resp3.status_code == 200
 
     def test_reset_with_wrong_code(self, client, test_user):
@@ -130,7 +130,7 @@ class TestForgotAndResetPassword:
         assert resp2.status_code == 200
         assert resp2.json()["success"] is True
 
-        resp3 = client.post("/auth/login", json={"email": test_user.email, "password": "newpass456"})
+        resp3 = client.post("/auth/login", json={"identifier": test_user.email, "password": "newpass456"})
         assert resp3.status_code == 200
 
     def test_reset_password_invalid_token(self, client):

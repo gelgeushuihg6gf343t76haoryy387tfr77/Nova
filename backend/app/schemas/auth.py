@@ -9,10 +9,11 @@ class RegisterRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=6)
     full_name: str | None = None
+    username: str | None = Field(default=None, min_length=2, max_length=100)
 
 
 class LoginRequest(BaseModel):
-    email: EmailStr
+    identifier: str = Field(min_length=1, description="Email or username")
     password: str
 
 
@@ -48,6 +49,7 @@ class TokenResponse(BaseModel):
 class UserMe(ORMModel):
     id: uuid.UUID
     email: EmailStr
+    username: str | None = None
     full_name: str | None
     plan: PlanTier
     subscription_status: str
