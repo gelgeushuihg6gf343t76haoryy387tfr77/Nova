@@ -111,10 +111,10 @@ export default function LandingPage() {
               Start Free
             </Link>
             <Link
-              to="/demo"
+              to="/login"
               style={{ ...ctaBase, background: "transparent", color: "var(--text)", border: "1.5px solid var(--border)" }}
             >
-              View Demo
+              Sign In
             </Link>
           </div>
           <svg viewBox="0 0 1100 520" style={{ marginTop: 60, width: "100%", height: "auto", borderRadius: 20, boxShadow: "var(--shadow-xl)" }}>
