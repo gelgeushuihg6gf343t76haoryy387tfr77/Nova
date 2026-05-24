@@ -1,5 +1,5 @@
 import uuid
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 from app.models import PlanTier
 from app.schemas.common import ORMModel
@@ -7,7 +7,7 @@ from app.schemas.common import ORMModel
 
 class RegisterRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(min_length=6)
     full_name: str | None = None
 
 
@@ -22,7 +22,7 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    password: str
+    password: str = Field(min_length=6)
 
 
 class SendResetCodeRequest(BaseModel):
@@ -32,7 +32,7 @@ class SendResetCodeRequest(BaseModel):
 class ResetWithCodeRequest(BaseModel):
     code: str
     email: EmailStr
-    password: str
+    password: str = Field(min_length=6)
 
 
 class ClerkLoginRequest(BaseModel):

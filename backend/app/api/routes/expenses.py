@@ -17,7 +17,7 @@ from app.services.crud_service import create_entity, delete_entity, get_owned_en
 from app.services.exchange_rates import exchange_service
 
 router = APIRouter()
-logger = logging.getLogger("business_clarity")
+logger = logging.getLogger("nova")
 
 
 @router.get("", response_model=list[ExpenseRead])

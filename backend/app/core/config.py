@@ -5,12 +5,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
-    app_name: str = "Business Clarity API"
+    app_name: str = "Nova API"
     app_env: str = "development"
     app_debug: bool = True
     log_level: str = "INFO"
 
-    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/business_clarity"
+    database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/nova"
     jwt_secret_key: str = "change-me"
     jwt_algorithm: str = "HS256"
     jwt_expires_minutes: int = 60 * 24 * 30

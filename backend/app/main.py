@@ -15,9 +15,9 @@ logging.basicConfig(
     level=getattr(logging, settings.log_level.upper(), logging.INFO),
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 )
-logger = logging.getLogger("business_clarity")
+logger = logging.getLogger("nova")
 
-app = FastAPI(title=settings.app_name, version="1.3.0", debug=settings.app_debug)
+app = FastAPI(title="Nova API", version="1.4.0", debug=settings.app_debug)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 

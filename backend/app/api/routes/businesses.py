@@ -12,7 +12,7 @@ from app.schemas.business import BusinessCreate, BusinessRead
 from app.schemas.common import MessageResponse
 
 router = APIRouter()
-logger = logging.getLogger("business_clarity")
+logger = logging.getLogger("nova")
 
 
 @router.get("", response_model=list[BusinessRead])

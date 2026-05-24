@@ -1,8 +1,7 @@
-import random
-import uuid
-import logging
 import secrets
+import logging
 from datetime import UTC, datetime, timedelta
+import uuid
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -10,81 +9,11 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.core.security import create_access_token, hash_password, verify_password
-from app.models import User
+from app.models import PasswordResetToken, User
 from app.schemas.auth import LoginRequest, RegisterRequest
 from app.services.email_service import send_password_reset_code_email, send_password_reset_email
 
-logger = logging.getLogger("business_clarity")
-
-_RESET_TOKENS: dict[str, dict[str, str | datetime]] = {}
-_RESET_CODES: dict[str, dict[str, str | datetime]] = {}
-
-
-def verify_reset_token(token: str) -> str | None:
-    entry = _RESET_TOKENS.get(token)
-    if not entry:
-        return None
-    expires_at = entry["expires_at"]
-    if isinstance(expires_at, str):
-        expires_at = datetime.fromisoformat(expires_at)
-    if datetime.now(UTC) > expires_at:
-        _RESET_TOKENS.pop(token, None)
-        return None
-    return str(entry["user_id"])
-
-
-def reset_user_password(db: Session, token: str, new_password: str) -> bool:
-    user_id_str = verify_reset_token(token)
-    if not user_id_str:
-        return False
-    user = db.get(User, uuid.UUID(user_id_str))
-    if not user:
-        return False
-    user.password_hash = hash_password(new_password)
-    db.commit()
-    _RESET_TOKENS.pop(token, None)
-    return True
-
-
-def generate_reset_code(db: Session, email: str) -> str | None:
-    normalized_email = email.strip().lower()
-    user = db.scalar(select(User).where(User.email == normalized_email))
-    if not user:
-        return None
-
-    code = f"{random.randint(0, 999999):06d}"
-    expires_at = datetime.now(UTC) + timedelta(minutes=15)
-    _RESET_CODES[code] = {"user_id": str(user.id), "email": normalized_email, "expires_at": expires_at}
-    logger.info("reset_code_generated email=%s code=%s", normalized_email, code)
-    return code
-
-
-def verify_reset_code(code: str, email: str) -> str | None:
-    entry = _RESET_CODES.get(code)
-    if not entry:
-        return None
-    if entry["email"] != email.strip().lower():
-        return None
-    expires_at = entry["expires_at"]
-    if isinstance(expires_at, str):
-        expires_at = datetime.fromisoformat(expires_at)
-    if datetime.now(UTC) > expires_at:
-        _RESET_CODES.pop(code, None)
-        return None
-    return str(entry["user_id"])
-
-
-def reset_password_with_code(db: Session, code: str, email: str, new_password: str) -> bool:
-    user_id_str = verify_reset_code(code, email)
-    if not user_id_str:
-        return False
-    user = db.get(User, uuid.UUID(user_id_str))
-    if not user:
-        return False
-    user.password_hash = hash_password(new_password)
-    db.commit()
-    _RESET_CODES.pop(code, None)
-    return True
+logger = logging.getLogger("nova")
 
 
 def register_user(db: Session, payload: RegisterRequest) -> User:
@@ -120,7 +49,13 @@ def create_password_reset_link(db: Session, email: str) -> str | None:
 
     token = secrets.token_urlsafe(32)
     expires_at = datetime.now(UTC) + timedelta(minutes=30)
-    _RESET_TOKENS[token] = {"user_id": str(user.id), "expires_at": expires_at}
+    db.add(PasswordResetToken(
+        email=normalized_email,
+        token=token,
+        token_type="link",
+        expires_at=expires_at,
+    ))
+    db.commit()
     reset_link = f"{settings.app_base_url}/reset-password?token={token}"
     logger.info("password_reset_link email=%s link=%s", normalized_email, reset_link)
 
@@ -129,3 +64,86 @@ def create_password_reset_link(db: Session, email: str) -> str | None:
         logger.warning("DEV MODE: Reset link would be: %s", reset_link)
 
     return reset_link
+
+
+def verify_reset_token(db: Session, token: str) -> str | None:
+    row = db.scalar(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token == token,
+            PasswordResetToken.token_type == "link",
+            PasswordResetToken.used == False,
+            PasswordResetToken.expires_at > datetime.now(UTC),
+        )
+    )
+    if not row:
+        return None
+    row.used = True
+    db.commit()
+    user = db.scalar(select(User).where(User.email == row.email))
+    if not user:
+        return None
+    return str(user.id)
+
+
+def reset_user_password(db: Session, token: str, new_password: str) -> bool:
+    user_id_str = verify_reset_token(db, token)
+    if not user_id_str:
+        return False
+    user = db.get(User, uuid.UUID(user_id_str))
+    if not user:
+        return False
+    user.password_hash = hash_password(new_password)
+    db.commit()
+    return True
+
+
+def generate_reset_code(db: Session, email: str) -> str | None:
+    normalized_email = email.strip().lower()
+    user = db.scalar(select(User).where(User.email == normalized_email))
+    if not user:
+        return None
+
+    code = f"{secrets.randbelow(1000000):06d}"
+    expires_at = datetime.now(UTC) + timedelta(minutes=15)
+    db.add(PasswordResetToken(
+        email=normalized_email,
+        token=code,
+        token_type="code",
+        expires_at=expires_at,
+    ))
+    db.commit()
+    logger.info("reset_code_generated email=%s code=%s", normalized_email, code)
+    return code
+
+
+def verify_reset_code(db: Session, code: str, email: str) -> str | None:
+    normalized_email = email.strip().lower()
+    row = db.scalar(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token == code,
+            PasswordResetToken.token_type == "code",
+            PasswordResetToken.email == normalized_email,
+            PasswordResetToken.used == False,
+            PasswordResetToken.expires_at > datetime.now(UTC),
+        )
+    )
+    if not row:
+        return None
+    row.used = True
+    db.commit()
+    user = db.scalar(select(User).where(User.email == normalized_email))
+    if not user:
+        return None
+    return str(user.id)
+
+
+def reset_password_with_code(db: Session, code: str, email: str, new_password: str) -> bool:
+    user_id_str = verify_reset_code(db, code, email)
+    if not user_id_str:
+        return False
+    user = db.get(User, uuid.UUID(user_id_str))
+    if not user:
+        return False
+    user.password_hash = hash_password(new_password)
+    db.commit()
+    return True

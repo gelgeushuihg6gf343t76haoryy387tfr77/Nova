@@ -4,7 +4,7 @@ import urllib.request
 
 from app.core.config import settings
 
-logger = logging.getLogger("business_clarity")
+logger = logging.getLogger("nova")
 
 
 def verify_clerk_token(token: str) -> dict | None:

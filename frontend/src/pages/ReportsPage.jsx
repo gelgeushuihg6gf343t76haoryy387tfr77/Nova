@@ -27,7 +27,7 @@ export default function ReportsPage() {
   if (!report) {
     return (
       <div>
-        <h2>Pro Reports</h2>
+        <h2>Reports</h2>
         <p className="error">Unable to load reports.</p>
         <ToastNotification
           message={notify?.message || ""}
@@ -40,7 +40,7 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <h2>Pro Reports</h2>
+      <h2>Reports</h2>
       <h3>Monthly Performance</h3>
       {!report.monthly.length ? (
         <p className="empty-state">No report data yet. Add income and expenses to see trends.</p>

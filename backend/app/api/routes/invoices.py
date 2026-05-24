@@ -14,7 +14,7 @@ from app.schemas.invoices import InvoiceCreate, InvoiceRead, InvoiceStatusUpdate
 from app.services.crud_service import create_entity, delete_entity, get_owned_entity, list_entities, update_entity
 
 router = APIRouter()
-logger = logging.getLogger("business_clarity")
+logger = logging.getLogger("nova")
 
 
 @router.get("", response_model=list[InvoiceRead])

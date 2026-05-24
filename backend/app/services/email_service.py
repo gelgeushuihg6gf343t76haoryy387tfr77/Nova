@@ -4,7 +4,7 @@ import resend
 
 from app.core.config import settings
 
-logger = logging.getLogger("business_clarity")
+logger = logging.getLogger("nova")
 
 
 def send_password_reset_email(email: str, reset_link: str) -> bool:

@@ -3,9 +3,6 @@ import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import ThemeToggle from "./components/ThemeToggle";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { useAuth } from "./context/AuthContext";
-import BillingCancelPage from "./pages/BillingCancelPage";
-import BillingPage from "./pages/BillingPage";
-import BillingSuccessPage from "./pages/BillingSuccessPage";
 import BusinessesPage from "./pages/BusinessesPage";
 import BusinessSetupPage from "./pages/BusinessSetupPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -14,7 +11,6 @@ import HistoryPage from "./pages/HistoryPage";
 import IncomePage from "./pages/IncomePage";
 import InvoicesPage from "./pages/InvoicesPage";
 import LandingPage from "./pages/LandingPage";
-import PricingPage from "./pages/PricingPage";
 import ReportsPage from "./pages/ReportsPage";
 import SubscriptionsPage from "./pages/SubscriptionsPage";
 import TransactionsPage from "./pages/TransactionsPage";
@@ -82,6 +78,17 @@ function RequireBusiness({ children }) {
   return children;
 }
 
+function NotFound() {
+  return (
+    <div className="auth-card" style={{ textAlign: "center" }}>
+      <div className="auth-wordmark">Nova</div>
+      <h2>Page not found</h2>
+      <p className="auth-subtitle">This page doesn't exist or has been removed.</p>
+      <Link to="/" className="auth-submit" style={{ textDecoration: "none", marginTop: 16 }}>Go home</Link>
+    </div>
+  );
+}
+
 export default function App() {
   const { user, loading } = useAuth();
 
@@ -94,7 +101,6 @@ export default function App() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/demo" element={<ProtectedRoute><DashboardPage readOnly /></ProtectedRoute>} />
       <Route
         path="/business/setup"
         element={
@@ -119,16 +125,14 @@ export default function App() {
                   <Route path="/invoices" element={<InvoicesPage />} />
                   <Route path="/subscriptions" element={<SubscriptionsPage />} />
                   <Route path="/reports" element={<ReportsPage />} />
-                  <Route path="/pricing" element={<PricingPage />} />
-                  <Route path="/billing" element={<BillingPage />} />
-                  <Route path="/billing/success" element={<BillingSuccessPage />} />
-                  <Route path="/billing/cancel" element={<BillingCancelPage />} />
+                  <Route path="*" element={<NotFound />} />
                 </Routes>
               </Shell>
             </RequireBusiness>
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

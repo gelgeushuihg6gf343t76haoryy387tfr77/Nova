@@ -166,3 +166,15 @@ Index("idx_expenses_business_date", Expense.business_id, Expense.occurred_on)
 Index("idx_invoices_business_status_due", Invoice.business_id, Invoice.status, Invoice.due_on)
 Index("idx_subscriptions_business_next", Subscription.business_id, Subscription.next_billing_date)
 Index("idx_webhook_provider_event", BillingWebhookEvent.provider, BillingWebhookEvent.external_event_id, unique=True)
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    token: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+    token_type: Mapped[str] = mapped_column(String(10), nullable=False)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    used: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow, nullable=False)

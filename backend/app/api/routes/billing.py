@@ -17,7 +17,7 @@ from app.schemas.billing import CheckoutRequest, CheckoutResponse
 from app.schemas.payment_webhook import PaymentInboundEvent
 from app.services.category_match import resolve_category_id
 
-logger = logging.getLogger("business_clarity")
+logger = logging.getLogger("nova")
 
 router = APIRouter()
 

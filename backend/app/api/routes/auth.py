@@ -15,7 +15,7 @@ from app.core.security import create_access_token
 from app.services.auth_service import create_password_reset_link, generate_reset_code, login_user, register_user, reset_password_with_code, reset_user_password
 from app.services.email_service import send_password_reset_code_email
 
-logger = logging.getLogger("business_clarity")
+logger = logging.getLogger("nova")
 
 router = APIRouter()
 

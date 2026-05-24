@@ -183,7 +183,7 @@ export default function IncomePage() {
             placeholder={`e.g. 5000 for ${form.currency} 50`}
             aria-invalid={!!fieldErrors.amount_cents}
           />
-          <small>Currency: {formatCurrencyLabel(form.currency)}</small>
+          <small>Amount in cents ({form.currency} 1.00 = 100 cents)</small>
           {fieldErrors.amount_cents ? <span className="field-error">{fieldErrors.amount_cents}</span> : null}
         </label>
         <label>

@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.models.exchange_rates import ExchangeRate
 
-logger = logging.getLogger("business_clarity")
+logger = logging.getLogger("nova")
 
 FALLBACK_RATES: dict[str, float] = {
     "USD": 1.0,
@@ -92,26 +92,6 @@ class ExchangeRateService:
             return 1.0
 
         rate_date = rate_date or date.today()
-
-        cached = db.scalar(
-            select(ExchangeRate).where(
-                ExchangeRate.from_currency == from_currency.upper(),
-                ExchangeRate.to_currency == to_currency.upper(),
-                ExchangeRate.rate_date == rate_date,
-            )
-        )
-        if cached:
-            return cached.rate
-
-        cached = db.scalar(
-            select(ExchangeRate).where(
-                ExchangeRate.from_currency == from_currency.upper(),
-                ExchangeRate.to_currency == to_currency.upper(),
-                ExchangeRate.rate_date == rate_date,
-            )
-        )
-        if cached:
-            return cached.rate
 
         self._refresh_rates(db, from_currency.upper())
 
