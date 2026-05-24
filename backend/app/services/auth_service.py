@@ -24,6 +24,7 @@ def register_user(db: Session, payload: RegisterRequest) -> User:
 
     user = User(
         email=normalized_email,
+        username=payload.username,
         password_hash=hash_password(payload.password),
         full_name=payload.full_name,
     )
