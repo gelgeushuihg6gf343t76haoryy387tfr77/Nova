@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 56" fill="none">
+  <rect width="240" height="56" fill="transparent"/>
+  <path d="M18 43V13L37 34V13H45V43L26 22V43H18Z" fill="currentColor"/>
+  <path d="M53 42L72 14H81L62 42H53ZM70 42L89 14H98L79 42H70Z" fill="currentColor"/>
+  <path d="M106 43L120 13H128L142 43H133L124 22L115 43H106Z" fill="currentColor"/>
+  <path d="M118 34H130V41H118V34Z" fill="currentColor"/>
+  <path d="M150 43V13L176 35V13H184V43L158 21V43H150Z" fill="currentColor"/>
+</svg>
