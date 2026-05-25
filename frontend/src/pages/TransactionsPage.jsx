@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ToastNotification from "../components/ToastNotification";
-import { extractCurrencyCode, formatMoneyFromCents } from "../utils/currency";
+import { dollarsToCents, extractCurrencyCode, formatMoneyFromCents } from "../utils/currency";
 
 function toTimestamp(value) {
   const date = value ? new Date(value) : null;
@@ -90,7 +90,7 @@ export default function TransactionsPage() {
     setEditingTx(tx);
     setEditForm({
       description: tx.description || "",
-      amount_cents: String(tx.amount_cents || ""),
+      amount_cents: String((tx.amount_cents || 0) / 100),
       occurred_on: tx.occurred_on || "",
     });
   };
@@ -103,15 +103,15 @@ export default function TransactionsPage() {
   const saveEdit = async (e) => {
     e.preventDefault();
     if (!editingTx) return;
-    const amount = Number(editForm.amount_cents);
-    if (!Number.isFinite(amount) || amount <= 0) {
+    const dollars = Number(editForm.amount_cents);
+    if (!Number.isFinite(dollars) || dollars <= 0) {
       setNotify({ message: "Please enter a valid positive amount.", tone: "error" });
       return;
     }
     setSavingEdit(true);
     try {
       const payload = {
-        amount_cents: amount,
+        amount_cents: dollarsToCents(dollars),
         occurred_on: editForm.occurred_on,
         ...(editingTx.type === "income" ? { source: editForm.description } : { vendor: editForm.description }),
       };
@@ -241,10 +241,11 @@ export default function TransactionsPage() {
               />
             </label>
             <label>
-              Amount (cents)
+              Amount
               <input
                 type="number"
-                min={1}
+                step="any"
+                min={0}
                 value={editForm.amount_cents}
                 onChange={(e) => setEditForm((prev) => ({ ...prev, amount_cents: e.target.value }))}
                 required

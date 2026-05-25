@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import EditableBubbleList from "../components/EditableBubbleList";
 import ToastNotification from "../components/ToastNotification";
+import { dollarsToCents } from "../utils/currency";
 
 export default function SubscriptionsPage() {
   const [items, setItems] = useState([]);
@@ -30,7 +31,7 @@ export default function SubscriptionsPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const payload = { ...form, amount_cents: Number(form.amount_cents) };
+      const payload = { ...form, amount_cents: dollarsToCents(form.amount_cents) };
       const created = await api.post("/subscriptions", payload);
       setItems((prev) => [created, ...prev]);
       setForm({ vendor: "", amount_cents: "", billing_cycle: "monthly", start_date: "", next_billing_date: "" });
@@ -43,7 +44,7 @@ export default function SubscriptionsPage() {
   };
 
   const updateItem = async (id, patch) => {
-    const normalized = { ...patch, amount_cents: Number(patch.amount_cents) };
+    const normalized = { ...patch, amount_cents: dollarsToCents(patch.amount_cents) };
     const previous = items;
     setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...normalized } : x)));
     try {
@@ -80,8 +81,8 @@ export default function SubscriptionsPage() {
           <input value={form.vendor} onChange={(e) => setForm((p) => ({ ...p, vendor: e.target.value }))} placeholder="e.g. Netflix" required />
         </label>
         <label>
-          Amount (¢)
-          <input type="number" min={1} value={form.amount_cents} onChange={(e) => setForm((p) => ({ ...p, amount_cents: e.target.value }))} placeholder="e.g. 1999" required />
+          Amount
+          <input type="number" step="any" min={0} value={form.amount_cents} onChange={(e) => setForm((p) => ({ ...p, amount_cents: e.target.value }))} placeholder="e.g. 19.99" required />
         </label>
         <label>
           Cycle
@@ -106,7 +107,7 @@ export default function SubscriptionsPage() {
         emptyText="No subscriptions yet. Add rent, SaaS tools, or any recurring bills to track upcoming charges."
         fields={[
           { name: "vendor", label: "Vendor" },
-          { name: "amount_cents", label: "Amount (cents)", type: "number" },
+          { name: "amount_cents", label: "Amount", type: "cents" },
           { name: "billing_cycle", label: "Cycle" },
           { name: "start_date", label: "Start", type: "date" },
           { name: "next_billing_date", label: "Next Billing", type: "date" },

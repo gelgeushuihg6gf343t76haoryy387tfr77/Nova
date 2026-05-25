@@ -4,6 +4,7 @@ import { api } from "../api/client";
 import BubbleCard from "../components/BubbleCard";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import ToastNotification from "../components/ToastNotification";
+import { formatMoneyFromCents } from "../utils/currency";
 
 function downloadCSV(csv, filename) {
   const blob = new Blob([csv], { type: "text/csv" });
@@ -84,7 +85,7 @@ export default function ReportsPage() {
             <BubbleCard
               key={m.month}
               title={m.month}
-              subtitle={`Income ${m.income_cents} / Expense ${m.expense_cents}`}
+              subtitle={`Income ${formatMoneyFromCents(m.income_cents)} / Expense ${formatMoneyFromCents(m.expense_cents)}`}
               amountCents={m.profit_cents}
               copyText={`${m.month} profit ${m.profit_cents}`}
             />

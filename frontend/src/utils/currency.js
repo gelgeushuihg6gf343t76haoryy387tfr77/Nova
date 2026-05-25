@@ -109,6 +109,10 @@ export function formatMoneyFromCents(amountCents, currencyCode) {
   return `${symbol} ${formatted}`;
 }
 
+export function dollarsToCents(dollars) {
+  return Math.round(Number(dollars || 0) * 100);
+}
+
 export function formatConvertedAmount(originalAmountCents, originalCurrency, convertedAmountCents, businessCurrency) {
   const original = formatMoneyFromCents(originalAmountCents, originalCurrency);
   if (!convertedAmountCents || originalCurrency === businessCurrency) {

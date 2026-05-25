@@ -4,7 +4,7 @@ import { api } from "../api/client";
 import CsvImportModal from "../components/CsvImportModal";
 import EditableBubbleList from "../components/EditableBubbleList";
 import ToastNotification from "../components/ToastNotification";
-import { appendCurrencySuffix, countryCurrencyMap, extractCurrencyCode, formatCurrencyLabel } from "../utils/currency";
+import { appendCurrencySuffix, countryCurrencyMap, dollarsToCents, extractCurrencyCode } from "../utils/currency";
 import { countryCodeMap, countryFlag } from "../utils/countries";
 
 const LS_FIRST_INCOME = "nova_celebrate_first_income";
@@ -72,16 +72,16 @@ export default function IncomePage() {
   const create = async (e) => {
     e.preventDefault();
     const errs = {};
-    const amount = Number(form.amount_cents);
-    if (!Number.isFinite(amount) || amount <= 0) {
-      errs.amount_cents = "Use a positive amount in cents (whole number).";
+    const dollars = Number(form.amount_cents);
+    if (!Number.isFinite(dollars) || dollars <= 0) {
+      errs.amount_cents = "Enter a positive amount.";
     }
     if (!form.occurred_on) errs.occurred_on = "Choose the date you were paid.";
     setFieldErrors(errs);
     if (Object.keys(errs).length) return;
 
     const payload = {
-      amount_cents: amount,
+      amount_cents: dollarsToCents(dollars),
       occurred_on: form.occurred_on || today,
       source: appendCurrencySuffix(form.source, form.currency),
       category_id: form.category_id || null,
@@ -125,7 +125,7 @@ export default function IncomePage() {
   };
 
   const updateItem = async (id, patch) => {
-    const normalized = { ...patch, amount_cents: Number(patch.amount_cents) };
+    const normalized = { ...patch, amount_cents: dollarsToCents(patch.amount_cents) };
     if (patch.category_id === "" || patch.category_id === undefined) normalized.category_id = null;
     const previous = items;
     setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...normalized } : x)));
@@ -154,7 +154,7 @@ export default function IncomePage() {
 
   const listFields = useMemo(
     () => [
-      { name: "amount_cents", label: "Amount (cents)", type: "number" },
+      { name: "amount_cents", label: "Amount", type: "cents" },
       { name: "occurred_on", label: "Date", type: "date" },
       { name: "source", label: "Source" },
       { name: "category_id", label: "Category", type: "select", options: categoryOptions },
@@ -171,19 +171,19 @@ export default function IncomePage() {
 
       <form className="quick-add-row" onSubmit={create} noValidate>
         <label>
-          Amount (¢)
+          Amount
           <input
             type="number"
-            min={1}
+            step="any"
+            min={0}
             value={form.amount_cents}
             onChange={(e) => {
               setForm((p) => ({ ...p, amount_cents: e.target.value }));
               setFieldErrors((fe) => ({ ...fe, amount_cents: undefined }));
             }}
-            placeholder={`e.g. 5000 for ${form.currency} 50`}
+            placeholder={`e.g. 50.00 ${form.currency}`}
             aria-invalid={!!fieldErrors.amount_cents}
           />
-          <small>Amount in cents ({form.currency} 1.00 = 100 cents)</small>
           {fieldErrors.amount_cents ? <span className="field-error">{fieldErrors.amount_cents}</span> : null}
         </label>
         <label>

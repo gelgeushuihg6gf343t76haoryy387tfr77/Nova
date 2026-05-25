@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
 import EditableBubbleList from "../components/EditableBubbleList";
 import ToastNotification from "../components/ToastNotification";
+import { dollarsToCents } from "../utils/currency";
 
 function addDays(isoDay, days) {
   const d = new Date(`${isoDay}T12:00:00.000Z`);
@@ -48,10 +49,10 @@ export default function InvoicesPage() {
   const create = async (e) => {
     e.preventDefault();
     const errs = {};
-    const amount = Number(form.amount_cents);
+    const dollars = Number(form.amount_cents);
     if (!form.invoice_number.trim()) errs.invoice_number = "Invoice number is required.";
     if (!form.client_name.trim()) errs.client_name = "Client name is required.";
-    if (!Number.isFinite(amount) || amount <= 0) errs.amount_cents = "Enter amount in cents (positive whole number).";
+    if (!Number.isFinite(dollars) || dollars <= 0) errs.amount_cents = "Enter a positive amount.";
     if (!form.issued_on) errs.issued_on = "Choose an issue date.";
     if (!form.due_on) errs.due_on = "Choose a due date.";
     setFieldErrors(errs);
@@ -60,7 +61,7 @@ export default function InvoicesPage() {
     const payload = {
       invoice_number: form.invoice_number.trim(),
       client_name: form.client_name.trim(),
-      amount_cents: amount,
+      amount_cents: dollarsToCents(dollars),
       issued_on: form.issued_on,
       due_on: form.due_on,
       status: form.status,
@@ -107,7 +108,7 @@ export default function InvoicesPage() {
   };
 
   const updateItem = async (id, patch) => {
-    const normalized = { ...patch, amount_cents: Number(patch.amount_cents) };
+    const normalized = { ...patch, amount_cents: dollarsToCents(patch.amount_cents) };
     const previous = items;
     setItems((prev) => prev.map((x) => (x.id === id ? { ...x, ...normalized } : x)));
     try {
@@ -165,10 +166,11 @@ export default function InvoicesPage() {
           {fieldErrors.client_name ? <span className="field-error">{fieldErrors.client_name}</span> : null}
         </label>
         <label>
-          Amount (¢)
+          Amount
           <input
             type="number"
-            min={1}
+            step="any"
+            min={0}
             value={form.amount_cents}
             onChange={(e) => {
               setForm((p) => ({ ...p, amount_cents: e.target.value }));
@@ -201,7 +203,7 @@ export default function InvoicesPage() {
         fields={[
           { name: "invoice_number", label: "Invoice #" },
           { name: "client_name", label: "Client" },
-          { name: "amount_cents", label: "Amount (cents)", type: "number" },
+          { name: "amount_cents", label: "Amount", type: "cents" },
           { name: "issued_on", label: "Issued", type: "date" },
           { name: "due_on", label: "Due", type: "date" },
           { name: "status", label: "Status" },

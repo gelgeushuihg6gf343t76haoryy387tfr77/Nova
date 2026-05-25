@@ -41,7 +41,10 @@ export default function EditableBubbleList({
     setEditingId(item.id);
     const next = {};
     fields.forEach((f) => {
-      const v = item[f.name];
+      let v = item[f.name];
+      if (f.type === "cents" && v != null) {
+        v = Number(v) / 100;
+      }
       next[f.name] = v === null || v === undefined ? "" : String(v);
     });
     setEditForm(next);
