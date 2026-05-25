@@ -8,27 +8,11 @@ export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [notify, setNotify] = useState(null);
-  const [sent, setSent] = useState(false);
-  const [mode, setMode] = useState(null);
+  const [mode, setMode] = useState("email");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [resetDone, setResetDone] = useState(false);
-
-  const sendLink = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setNotify(null);
-    try {
-      const res = await api.post("/auth/forgot-password", { email: email.trim().toLowerCase() });
-      setSent(true);
-      setNotify({ message: res.message || "If this email exists, a reset link was sent.", tone: "success" });
-    } catch (err) {
-      setNotify({ message: err.message, tone: "error" });
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const sendCode = async (e) => {
     e.preventDefault();
@@ -89,7 +73,7 @@ export default function ForgotPasswordPage() {
         <div className="auth-wordmark">Nova</div>
         <h2>Enter reset code</h2>
         <p className="auth-subtitle">
-          Enter the 6-digit code sent to your email, then set a new password.
+          We sent a 6-digit code to <strong>{email}</strong>. Enter it below, then set a new password.
         </p>
         <form onSubmit={submitCode} className="form-grid">
           <label>
@@ -111,7 +95,7 @@ export default function ForgotPasswordPage() {
                 type={showPw ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                minLength={4}
+                minLength={6}
                 required
                 disabled={submitting}
               />
@@ -140,8 +124,8 @@ export default function ForgotPasswordPage() {
     <div className="auth-card">
       <div className="auth-wordmark">Nova</div>
       <h2>Forgot password</h2>
-      <p className="auth-subtitle">Enter your email and choose a reset method.</p>
-      <form onSubmit={sendLink} className="form-grid">
+      <p className="auth-subtitle">Enter your email and we'll send a reset code.</p>
+      <form onSubmit={sendCode} className="form-grid">
         <label>
           Email
           <input
@@ -150,20 +134,11 @@ export default function ForgotPasswordPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@company.com"
             required
-            disabled={submitting || sent}
+            disabled={submitting}
           />
         </label>
-        <button type="submit" disabled={submitting || sent} style={{ width: "100%", marginTop: 4 }}>
-          {submitting ? "Sending…" : "Send reset link"}
-        </button>
-        <button
-          type="button"
-          onClick={sendCode}
-          disabled={submitting || sent}
-          className="btn-secondary"
-          style={{ width: "100%" }}
-        >
-          {submitting ? "Sending…" : "Send 6-digit code"}
+        <button type="submit" disabled={submitting} style={{ width: "100%", marginTop: 4 }}>
+          {submitting ? "Sending…" : "Send reset code"}
         </button>
       </form>
       <p>
