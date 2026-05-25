@@ -12,8 +12,8 @@ from app.models import User
 from app.schemas.auth import ClerkLoginRequest, ForgotPasswordRequest, LoginRequest, RegisterRequest, ResetPasswordRequest, ResetWithCodeRequest, SendResetCodeRequest, TokenResponse, UserMe
 from app.schemas.common import MessageResponse
 from app.core.security import create_access_token
-from app.services.auth_service import create_password_reset_link, generate_reset_code, login_user, register_user, reset_password_with_code, reset_user_password
-from app.services.email_service import send_password_reset_code_email
+from app.services.auth_service import create_password_reset_link, generate_reset_code, login_user, register_user, reset_password_with_code, reset_user_password, verify_email_token
+from app.services.email_service import send_password_reset_code_email, send_verification_email
 
 logger = logging.getLogger("nova")
 
@@ -23,7 +23,12 @@ router = APIRouter()
 @router.post("/register", response_model=UserMe)
 @limiter.limit("10/minute")
 def register(request: Request, payload: RegisterRequest, db: Session = Depends(get_db)) -> UserMe:
-    user = register_user(db, payload)
+    user, verify_token = register_user(db, payload)
+    if verify_token:
+        verify_link = f"{settings.app_base_url}/verify-email?token={verify_token}"
+        sent = send_verification_email(user.email, verify_link)
+        if settings.app_env == "development":
+            logger.warning("DEV MODE: Verification link for %s: %s", user.email, verify_link)
     return UserMe.model_validate(user)
 
 
@@ -96,6 +101,42 @@ def clerk_login(request: Request, payload: ClerkLoginRequest, db: Session = Depe
 
     token = create_access_token(str(user.id))
     return {"access_token": token}
+
+
+@router.get("/verify-email")
+@limiter.limit("10/minute")
+def verify_email(request: Request, token: str, db: Session = Depends(get_db)):
+    user_id = verify_email_token(db, token)
+    if not user_id:
+        return {"success": False, "message": "Invalid or expired verification link."}
+    return {"success": True, "message": "Email verified. You can now sign in."}
+
+
+@router.post("/resend-verification")
+@limiter.limit("3/minute")
+def resend_verification(request: Request, payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    normalized_email = payload.email.strip().lower()
+    user = db.scalar(select(User).where(User.email == normalized_email))
+    if not user:
+        return {"message": "If this email exists, a verification link was sent."}
+    if user.is_verified:
+        return {"message": "This email is already verified. You can sign in."}
+
+    import secrets
+    from datetime import UTC, datetime, timedelta
+    from app.models import PasswordResetToken
+    verify_token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(UTC) + timedelta(hours=24)
+    db.add(PasswordResetToken(
+        email=normalized_email,
+        token=verify_token,
+        token_type="verify",
+        expires_at=expires_at,
+    ))
+    db.commit()
+    verify_link = f"{settings.app_base_url}/verify-email?token={verify_token}"
+    send_verification_email(normalized_email, verify_link)
+    return {"message": "If this email exists, a verification link was sent."}
 
 
 @router.get("/me", response_model=UserMe)

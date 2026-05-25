@@ -46,8 +46,7 @@ export function AuthProvider({ children }) {
   const hasBusiness = () => businesses.length > 0;
 
   const register = async (payload) => {
-    await api.post("/auth/register", payload);
-    await login(payload.email, payload.password);
+    return api.post("/auth/register", payload);
   };
 
   const createBusiness = async (payload) => {

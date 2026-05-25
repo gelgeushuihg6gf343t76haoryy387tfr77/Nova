@@ -27,9 +27,12 @@ export default function LoginPage() {
       await login(identifier.trim().toLowerCase(), password);
       navigate("/dashboard");
     } catch (err) {
-      const message = err.message === "Invalid credentials"
-        ? "Wrong email/username or password, please try again."
-        : err.message;
+      let message = err.message;
+      if (err.message === "Invalid credentials") {
+        message = "Wrong email/username or password, please try again.";
+      } else if (err.message.includes("locked")) {
+        message = "Too many failed attempts. Account locked for 15 minutes.";
+      }
       setNotify({ message, tone: "error" });
     } finally {
       setSubmitting(false);

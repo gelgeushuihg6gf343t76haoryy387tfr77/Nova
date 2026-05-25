@@ -16,7 +16,7 @@ from app.services.email_service import send_password_reset_code_email, send_pass
 logger = logging.getLogger("nova")
 
 
-def register_user(db: Session, payload: RegisterRequest) -> User:
+def register_user(db: Session, payload: RegisterRequest) -> tuple[User, str | None]:
     normalized_email = payload.email.strip().lower()
     existing = db.scalar(select(User).where(User.email == normalized_email))
     if existing:
@@ -31,7 +31,18 @@ def register_user(db: Session, payload: RegisterRequest) -> User:
     db.add(user)
     db.commit()
     db.refresh(user)
-    return user
+
+    verify_token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(UTC) + timedelta(hours=24)
+    db.add(PasswordResetToken(
+        email=normalized_email,
+        token=verify_token,
+        token_type="verify",
+        expires_at=expires_at,
+    ))
+    db.commit()
+
+    return user, verify_token
 
 
 def login_user(db: Session, payload: LoginRequest) -> str:
@@ -39,8 +50,34 @@ def login_user(db: Session, payload: LoginRequest) -> str:
     user = db.scalar(select(User).where(User.email == identifier))
     if not user:
         user = db.scalar(select(User).where(User.username == identifier))
-    if not user or not verify_password(payload.password, user.password_hash):
+
+    if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+    if user.locked_until and user.locked_until > datetime.now(UTC):
+        remaining = int((user.locked_until - datetime.now(UTC)).total_seconds() // 60)
+        raise HTTPException(
+            status_code=status.HTTP_423_LOCKED,
+            detail=f"Account locked. Try again in {remaining} minute(s).",
+        )
+
+    if not verify_password(payload.password, user.password_hash):
+        user.failed_attempts = (user.failed_attempts or 0) + 1
+        if user.failed_attempts >= 5:
+            user.locked_until = datetime.now(UTC) + timedelta(minutes=15)
+        db.commit()
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+
+    user.failed_attempts = 0
+    user.locked_until = None
+    db.commit()
+
+    if not user.is_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Please verify your email before signing in. Check your inbox for the verification link.",
+        )
+
     return create_access_token(str(user.id))
 
 
@@ -150,3 +187,24 @@ def reset_password_with_code(db: Session, code: str, email: str, new_password: s
     user.password_hash = hash_password(new_password)
     db.commit()
     return True
+
+
+def verify_email_token(db: Session, token: str) -> str | None:
+    row = db.scalar(
+        select(PasswordResetToken).where(
+            PasswordResetToken.token == token,
+            PasswordResetToken.token_type == "verify",
+            PasswordResetToken.used == False,
+            PasswordResetToken.expires_at > datetime.now(UTC),
+        )
+    )
+    if not row:
+        return None
+    row.used = True
+    db.commit()
+    user = db.scalar(select(User).where(User.email == row.email))
+    if not user:
+        return None
+    user.is_verified = True
+    db.commit()
+    return str(user.id)

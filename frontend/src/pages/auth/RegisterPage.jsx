@@ -1,22 +1,16 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link } from "react-router-dom";
 
 import ToastNotification from "../../components/ToastNotification";
 import { useAuth } from "../../context/AuthContext";
 
 export default function RegisterPage() {
-  const { register, user, loading } = useAuth();
-  const navigate = useNavigate();
+  const { register } = useAuth();
   const [form, setForm] = useState({ full_name: "", email: "", username: "", password: "" });
   const [showPw, setShowPw] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [notify, setNotify] = useState(null);
-
-  useEffect(() => {
-    if (!loading && user) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [loading, user, navigate]);
+  const [registered, setRegistered] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -27,13 +21,29 @@ export default function RegisterPage() {
         ...form,
         email: form.email.trim().toLowerCase(),
       });
-      navigate("/business/setup");
+      setRegistered(true);
     } catch (err) {
       setNotify({ message: err.message, tone: "error" });
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (registered) {
+    return (
+      <div className="auth-card">
+        <div className="auth-wordmark">Nova</div>
+        <h2>Check your email</h2>
+        <p className="auth-subtitle">
+          We sent a verification link to <strong>{form.email.trim().toLowerCase()}</strong>.
+          Click the link to verify your account, then sign in.
+        </p>
+        <Link to="/login" className="auth-submit" style={{ textDecoration: "none" }}>
+          Go to sign in
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="auth-card">

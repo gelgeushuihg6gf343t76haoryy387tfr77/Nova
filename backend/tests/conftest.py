@@ -58,6 +58,7 @@ def test_user(db_session: Session) -> User:
         email="test@example.com",
         password_hash=hash_password("password123"),
         full_name="Test User",
+        is_verified=True,
     )
     db_session.add(user)
     db_session.commit()

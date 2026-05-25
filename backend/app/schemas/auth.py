@@ -51,6 +51,7 @@ class UserMe(ORMModel):
     email: EmailStr
     username: str | None = None
     full_name: str | None
+    is_verified: bool
     plan: PlanTier
     subscription_status: str
     provider: str | None

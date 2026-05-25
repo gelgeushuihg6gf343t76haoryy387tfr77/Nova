@@ -49,8 +49,13 @@ class TestRegister:
 
 
 class TestLogin:
-    def test_login_success(self, client):
+    def test_login_success(self, client, db_session):
+        from app.models import User
+        from sqlalchemy import select
         client.post("/auth/register", json={"email": "login@example.com", "password": "rightpass"})
+        user = db_session.scalar(select(User).where(User.email == "login@example.com"))
+        user.is_verified = True
+        db_session.commit()
         resp = client.post("/auth/login", json={"identifier": "login@example.com", "password": "rightpass"})
         assert resp.status_code == 200
         data = resp.json()

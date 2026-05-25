@@ -22,9 +22,14 @@ class TestBusinesses:
         resp = client.delete(f"/businesses/{business_id}", headers=auth_headers)
         assert resp.status_code == 200
 
-    def test_delete_other_users_business(self, client, auth_headers, business_id):
+    def test_delete_other_users_business(self, client, auth_headers, business_id, db_session):
+        from app.models import User
+        from sqlalchemy import select
         client2_resp = client.post("/auth/register", json={"email": "other@example.com", "password": "secret123"})
         other_id = client2_resp.json()["id"]
+        other_user = db_session.scalar(select(User).where(User.email == "other@example.com"))
+        other_user.is_verified = True
+        db_session.commit()
         other_token_resp = client.post("/auth/login", json={"identifier": "other@example.com", "password": "secret123"})
         other_token = other_token_resp.json()["access_token"]
         resp = client.delete(f"/businesses/{business_id}", headers={"Authorization": f"Bearer {other_token}"})
