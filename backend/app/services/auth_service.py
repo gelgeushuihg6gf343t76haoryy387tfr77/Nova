@@ -27,22 +27,13 @@ def register_user(db: Session, payload: RegisterRequest) -> tuple[User, str | No
         username=payload.username,
         password_hash=hash_password(payload.password),
         full_name=payload.full_name,
+        is_verified=True,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
 
-    verify_token = secrets.token_urlsafe(32)
-    expires_at = datetime.now(UTC) + timedelta(hours=24)
-    db.add(PasswordResetToken(
-        email=normalized_email,
-        token=verify_token,
-        token_type="verify",
-        expires_at=expires_at,
-    ))
-    db.commit()
-
-    return user, verify_token
+    return user, None
 
 
 def login_user(db: Session, payload: LoginRequest) -> str:
