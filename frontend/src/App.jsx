@@ -33,9 +33,7 @@ function Shell({ children }) {
     <div className={`app-shell ${user?.plan === "pro" ? "theme-pro" : ""}`}>
       <aside className="sidebar">
         <div className="brand-wordmark">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="var(--text)">
-            <path d="M8 34V6L22 22V6H30V34L16 18V34H8Z"/>
-          </svg>
+          <img src="/logo.jpg" alt="Nova" style={{ height: 28, width: 28, borderRadius: 6, objectFit: "cover" }} />
           Nova
         </div>
         {user && <span className="plan">Free — payment coming soon</span>}

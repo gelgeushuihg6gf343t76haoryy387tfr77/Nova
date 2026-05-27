@@ -84,7 +84,8 @@ export default function LandingPage() {
           margin: "0 auto",
         }}
       >
-        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--text)" }}>
+        <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--text)", display: "flex", alignItems: "center", gap: 8 }}>
+          <img src="/logo.jpg" alt="" style={{ height: 28, width: 28, borderRadius: 6, objectFit: "cover" }} />
           Nova
         </div>
         <div style={{ display: "flex", gap: 8 }}>
