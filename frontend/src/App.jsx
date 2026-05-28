@@ -33,7 +33,7 @@ function Shell({ children }) {
     <div className={`app-shell ${user?.plan === "pro" ? "theme-pro" : ""}`}>
       <aside className="sidebar">
         <div className="brand-wordmark">
-          <img src="/logo.jpg" alt="Nova" style={{ height: 28, width: 28, borderRadius: 6, objectFit: "cover" }} />
+          <img src="/logo.png" alt="Nova" style={{ height: 28, width: 28, objectFit: "contain" }} />
           Nova
         </div>
         {user && <span className="plan">Free — payment coming soon</span>}
