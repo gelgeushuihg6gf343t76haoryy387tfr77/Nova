@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     lemonsqueezy_webhook_secret: str = ""
     payment_webhook_secret: str = ""
 
-    resend_api_key: str = ""
+    sendgrid_api_key: str = ""
     email_from_address: str = "noreply@novabookkeeping.com"
 
     clerk_secret_key: str = ""

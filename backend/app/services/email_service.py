@@ -1,6 +1,7 @@
 import logging
 
-import resend
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 from app.core.config import settings
 
@@ -8,21 +9,20 @@ logger = logging.getLogger("nova")
 
 
 def _send_email(to_email: str, subject: str, html: str) -> bool:
-    if not settings.resend_api_key:
-        logger.warning("RESEND_API_KEY not set — cannot send email.")
+    if not settings.sendgrid_api_key:
+        logger.warning("SENDGRID_API_KEY not set — cannot send email.")
         return False
 
-    resend.api_key = settings.resend_api_key
-    from_email = settings.email_from_address or "noreply@novabookkeeping.com"
-
+    message = Mail(
+        from_email=settings.email_from_address or "noreply@novabookkeeping.com",
+        to_emails=to_email,
+        subject=subject,
+        html_content=html,
+    )
     try:
-        response = resend.Emails.send({
-            "from": from_email,
-            "to": [to_email],
-            "subject": subject,
-            "html": html,
-        })
-        logger.info("email_sent to=%s subject=%s resend_id=%s", to_email, subject, response.get("id"))
+        sg = SendGridAPIClient(settings.sendgrid_api_key)
+        response = sg.send(message)
+        logger.info("email_sent to=%s subject=%s status=%s", to_email, subject, response.status_code)
         return True
     except Exception as e:
         logger.error("email_failed to=%s subject=%s error=%s", to_email, subject, e)
