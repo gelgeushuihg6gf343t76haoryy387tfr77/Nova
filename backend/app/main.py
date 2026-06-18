@@ -61,7 +61,6 @@ app.add_middleware(
 
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(businesses.router, prefix="/businesses", tags=["businesses"])
-app.include_router(businesses.router, prefix="/business", tags=["businesses"])
 app.include_router(categories.router, prefix="/categories", tags=["categories"])
 app.include_router(dashboard.router, prefix="/dashboard", tags=["dashboard"])
 app.include_router(income.router, prefix="/income", tags=["income"])

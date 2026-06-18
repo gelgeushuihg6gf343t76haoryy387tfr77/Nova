@@ -83,14 +83,15 @@ export default function RegisterPage() {
         <label>
           Password
           <span className="pw-wrap">
-            <input
-              type={showPw ? "text" : "password"}
-              value={form.password}
-              onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-              placeholder="At least 6 characters"
-              required
-              disabled={submitting}
-            />
+              <input
+                  type={showPw ? "text" : "password"}
+                  value={form.password}
+                  onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+                  placeholder="At least 8 characters"
+                  minLength={8}
+                  required
+                  disabled={submitting}
+                />
             <button type="button" className="pw-toggle" onClick={() => setShowPw((p) => !p)} tabIndex={-1}>
               {showPw ? "Hide" : "Show"}
             </button>

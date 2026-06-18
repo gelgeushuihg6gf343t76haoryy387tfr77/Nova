@@ -1,5 +1,4 @@
 const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
-console.log("API_BASE:", API_BASE);
 
 function getToken() {
   return localStorage.getItem("auth_token");
@@ -30,11 +29,8 @@ async function request(path, options = {}) {
 
   let response;
   try {
-    console.log(`Making request to: ${API_BASE}${path}`);
     response = await fetch(`${API_BASE}${path}`, { ...options, headers, signal: controller.signal });
-    console.log(`Response status: ${response.status}`);
   } catch (error) {
-    console.error('Fetch error:', error);
     clearTimeout(timeout);
     if (error.name === "AbortError") {
       throw new Error(`Request timed out after ${TIMEOUT_MS / 1000}s. Backend may be unreachable.`);

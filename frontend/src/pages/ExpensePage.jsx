@@ -4,8 +4,8 @@ import { api } from "../api/client";
 import CsvImportModal from "../components/CsvImportModal";
 import EditableBubbleList from "../components/EditableBubbleList";
 import ToastNotification from "../components/ToastNotification";
-import { appendCurrencySuffix, countryCurrencyMap, dollarsToCents, extractCurrencyCode } from "../utils/currency";
-import { countryCodeMap, countryFlag } from "../utils/countries";
+import { appendCurrencySuffix, dollarsToCents, extractCurrencyCode, formatCurrencyLabel } from "../utils/currency";
+import { countryCodeMap, countryCurrencyMap, countryFlag } from "../utils/countries";
 
 const LS_FIRST_EXPENSE = "nova_celebrate_first_expense";
 const LS_ONBOARD_STEP = "nova_onboarding_step";

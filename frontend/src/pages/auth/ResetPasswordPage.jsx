@@ -92,7 +92,7 @@ export default function ResetPasswordPage() {
               placeholder="At least 6 characters"
               autoComplete="new-password"
               required
-              minLength={6}
+                minLength={8}
             />
             <button
               type="button"

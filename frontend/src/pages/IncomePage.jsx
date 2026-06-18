@@ -4,8 +4,8 @@ import { api } from "../api/client";
 import CsvImportModal from "../components/CsvImportModal";
 import EditableBubbleList from "../components/EditableBubbleList";
 import ToastNotification from "../components/ToastNotification";
-import { appendCurrencySuffix, countryCurrencyMap, dollarsToCents, extractCurrencyCode } from "../utils/currency";
-import { countryCodeMap, countryFlag } from "../utils/countries";
+import { appendCurrencySuffix, dollarsToCents, extractCurrencyCode } from "../utils/currency";
+import { countryCodeMap, countryCurrencyMap, countryFlag } from "../utils/countries";
 
 const LS_FIRST_INCOME = "nova_celebrate_first_income";
 const LS_ONBOARD_STEP = "nova_onboarding_step";
@@ -100,9 +100,7 @@ export default function IncomePage() {
     setFieldErrors({});
     setSubmitting(true);
     try {
-      console.log("Sending income payload:", payload);
       const created = await api.post("/income", payload);
-      console.log("Income created:", created);
       setItems((prev) => prev.filter((x) => x.id !== tempId));
       localStorage.setItem(LS_ONBOARD_STEP, "1");
       let msg = "Income added.";
@@ -116,7 +114,6 @@ export default function IncomePage() {
       await load(true);
       setNotify({ message: msg, tone: "success" });
     } catch (err) {
-      console.error("Income creation error:", err);
       setItems((prev) => prev.filter((x) => x.id !== tempId));
       setNotify({ message: err.message, tone: "error" });
     } finally {

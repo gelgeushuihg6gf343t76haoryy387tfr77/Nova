@@ -7,23 +7,29 @@
 - [x] `VITE_API_BASE_URL` set to `https://backend-mu-plum-54.vercel.app`
 - [x] All routes work (`/`, `/dashboard/*`, auth pages, 404 page)
 - [x] SPA rewrites configured in `vercel.json`
+- [x] Premium UI redesign live (Linear/Apple/Notion-inspired)
+- [x] Loading spinner shown during auth load (no more blank screen)
+- [x] No `console.log` in production code
 
 ### Backend (Vercel)
 - [x] Auto-deploys from GitHub on push to `master`
 - [x] Environment variables set (DATABASE_URL, JWT_SECRET_KEY, CORS_ORIGINS, etc.)
 - [x] Password reset tokens table migrated to Neon
 - [x] Health endpoint returns `{"status":"ok"}`
+- [x] JWT secret must be set via env var (no default fallback)
+- [x] App debug defaults to `False`
 
 ### Database (Neon)
 - [x] Tables: businesses, users, income, expenses, categories, invoices, subscriptions, billing_webhook_events, exchange_rates, password_reset_tokens
 - [x] Indexes exist on foreign keys and date columns
 - [x] Exchange rate cache works with unique constraint on `(from_currency, to_currency, rate_date)`
 - [x] Password reset tokens persisted (not in-memory)
+- [x] Alembic migrations 0001–0004 applied
 
-### Email (Resend)
-- [x] RESEND_API_KEY configured
-- [x] From address: `onboarding@resend.dev` (Resend free tier)
-- [ ] ⚠️ **Before launch**: Verify a custom domain with Resend to use `nova@yourdomain.com`
+### Email (SendGrid)
+- [ ] ⚠️ **Before launch**: Set `SENDGRID_API_KEY` on Vercel backend env vars
+- [ ] ⚠️ **Before launch**: Remove `RESEND_API_KEY` from Vercel backend env vars
+- [ ] **If verifying from address**: SendGrid free tier can send from any single sender identity — verify `poethadar6@gmail.com` in SendGrid dashboard
 
 ## Rollback Plan
 
@@ -49,38 +55,42 @@ vercel rollback backend-mu-plum-54.vercel.app --scope poethadar6-2929s-projects
 ## Backup Plan
 
 - [ ] **Before launch**: Take a Neon DB snapshot (manual or enable Continuous Backup)
-- [ ] All environment variables are stored in `.env.local` (not committed)
+- [ ] All environment variables are stored in `.env` (gitignored, permissions 600)
 - [ ] GitHub is the source of truth for code — there's no other backup
-- [ ] Resend API key is in 1Password/Vault (save it if not already)
+- [ ] SendGrid API key saved in a password manager
 
 ## Testing Checklist
 
 ### Auth
-- [x] Registration with valid data works
-- [x] Registration with short password (< 6 chars) rejected
+- [x] Registration with valid data works (auto-verified until SendGrid is set)
+- [x] Registration with short password (< 8 chars) rejected
 - [x] Registration with duplicate email rejected
 - [x] Login with correct credentials works
 - [x] Login with wrong password returns friendly error
 - [x] Login with nonexistent email returns friendly error
-- [x] Forgot password sends email (or shows dev mode link)
-- [x] Reset password with valid token works
-- [x] Reset password with expired/invalid token rejected
-- [x] Send 6-digit code works
-- [x] Reset with code works
+- [x] Forgot password sends 6-digit code via email (dev fallback shows code)
+- [x] Reset password with valid code works
+- [x] Reset password with expired/invalid code rejected
+- [x] Send 6-digit code again via resend endpoint
 - [x] JWT token protects all `/dashboard/*` routes
+- [x] JWT expires after 12 hours (forces re-login)
+- [x] Account lockout after 5 failed login attempts (15 min cooldown)
+- [x] Email verification flow (verify email, resend verification)
+- [x] Password min length 8 enforced on all password fields
 
 ### Dashboard
 - [x] Empty state shows when no data exists
 - [x] Loading skeleton shows while fetching
-- [x] Stats (Income, Expenses, Profit) display correctly
-- [x] Trend cards show ↑/↓/→ with percentage
+- [x] Animated stat counters (income, expenses, profit)
+- [x] Trend badges (↑/↓/→ with percentage)
 - [x] Recent activity list works
 - [x] Refresh button works
 - [x] Onboarding checklist tracks progress
 - [x] 404 page shows for unknown routes
+- [x] Sidebar with SVG icons, premium business selector, logout button
 
 ### Income
-- [x] Create income with amount, date, source
+- [x] Create income with amount, date, source (dollar input, stored in cents)
 - [x] Edit income inline
 - [x] Delete income with confirmation
 - [x] Categorization works (auto/select)
@@ -88,7 +98,7 @@ vercel rollback backend-mu-plum-54.vercel.app --scope poethadar6-2929s-projects
 - [x] Error handling for negative amounts
 
 ### Expenses
-- [x] Create expense with amount, date, vendor
+- [x] Create expense with amount, date, vendor (dollar input, stored in cents)
 - [x] Edit expense inline
 - [x] Delete expense with confirmation
 - [x] Recurring flag works
@@ -104,7 +114,8 @@ vercel rollback backend-mu-plum-54.vercel.app --scope poethadar6-2929s-projects
 
 ### Reports
 - [x] Monthly income/expense/profit breakdown
-- [x] No longer gated behind Pro plan
+- [x] CSV export works
+- [x] Not gated behind any plan
 
 ### Multi-currency
 - [x] Exchange rate API auto-converts on create
@@ -118,36 +129,43 @@ vercel rollback backend-mu-plum-54.vercel.app --scope poethadar6-2929s-projects
 - [x] Loading states on all pages
 - [x] Empty states with helpful text and action buttons
 - [x] Mobile responsive (600px breakpoint)
-- [x] Dark mode toggle works throughout
+- [x] Dark mode toggle works throughout (SVG sun/moon toggle)
+- [x] Landing page: premium glass nav, gradient hero text, SVG mockup, testimonials
 
 ### Security
 - [x] Passwords hashed with bcrypt
-- [x] JWT expires at 12 hours
+- [x] JWT expires at 12 hours (was 30 days)
+- [x] JWT secret must be set via env var (no default fallback)
 - [x] Rate limiting on login (10/min), register (10/min), forgot password (3/min)
+- [x] Rate limiter respects X-Forwarded-For (Vercel proxy)
 - [x] CORS restricted to frontend origin
 - [x] Password reset tokens stored in DB (not in-memory)
 - [x] Reset tokens expire after 30 minutes (link) / 15 minutes (code)
-- [x] Secrets come from environment variables, not hardcoded
-- [x] Password validation minimum 6 characters
+- [x] Secrets come from environment variables, never hardcoded
+- [x] Password validation minimum 8 characters
+- [x] Account locked after 5 failed attempts (15 min)
+- [x] Email verification infrastructure ready
 - [x] No Pro/payment gates exposed in UI
+- [x] ForgotPasswordPage does not reveal whether email exists
 
 ## Known Issues (post-launch todo)
-- [ ] Cents-based input is confusing — consider dollar input with automatic conversion
-- [ ] No email verification for new registrations
-- [ ] No account lockout after failed login attempts
 - [ ] No 2FA
 - [ ] CSV import requires specific header format — consider adding templates
 - [ ] Reports UI is minimal — consider charts in v2
+- [ ] Email verification auto-skips users until SendGrid key is live
+- [ ] Deprecation warnings: `datetime.utcnow()`, `on_event` — non-blocking
 
 ## Launch Day Steps
 
-1. **Final DB backup** — take a Neon snapshot
-2. **Test registration** — create a fresh account, go through full flow
-3. **Test password reset** — verify email arrives (may not with `onboarding@resend.dev`)
-4. **Monitor Vercel logs** — watch for 500 errors in the first hour
-5. **Set up custom domain** — Vercel: add `nova.app` or similar. Resend: verify domain.
-6. **Add analytics** — optional: Plausible, Umami, or just Vercel Analytics
-7. **Share** — post on Product Hunt, Twitter, HN, Reddit r/SaaS
+1. **Set SendGrid API key** on Vercel backend env vars
+2. **Remove RESEND_API_KEY** from Vercel backend env vars
+3. **Take a Neon DB snapshot** (manual or enable Continuous Backup)
+4. **Test registration** — create a fresh account, go through full flow
+5. **Test password reset** — verify email arrives via SendGrid
+6. **Test verify email flow** — confirm verification email arrives and link works
+7. **Monitor Vercel logs** — watch for 500 errors in the first hour
+8. **Add analytics** — optional: Plausible, Umami, or just Vercel Analytics
+9. **Share** — post on Product Hunt, Twitter, HN, Reddit r/SaaS
 
 ## Launch Readiness
 
@@ -157,15 +175,16 @@ vercel rollback backend-mu-plum-54.vercel.app --scope poethadar6-2929s-projects
 | Authorization | ✅ Ready |
 | Income tracking | ✅ Ready |
 | Expense tracking | ✅ Ready |
-| Dashboard | ✅ Ready |
+| Dashboard | ✅ Ready (premium UI) |
 | Multi-currency | ✅ Ready |
-| Reports | ✅ Ready |
+| Reports | ✅ Ready (CSV export included) |
 | Invoices | ✅ Ready |
 | Subscriptions | ✅ Ready |
 | CSV import | ✅ Ready |
-| Email (password reset) | ⚠️ Needs custom domain |
-| Mobile experience | ⚠️ Basic (600px breakpoint) |
-| Security | ✅ Ready |
+| Email (password reset, verify) | ⚠️ Needs SendGrid API key on Vercel |
+| UI/UX | ✅ Ready (premium redesign complete) |
+| Security | ✅ Ready (audit blockers fixed) |
 | Error handling | ✅ Ready |
+| Loading states | ✅ Ready (spinner, skeleton, shimmer) |
 
-**Overall:** Launch ready. The two ⚠️ items are not blockers.
+**Overall:** Launch ready. The ⚠️ email item is the last env var config step on Vercel.

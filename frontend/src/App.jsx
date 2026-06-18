@@ -20,50 +20,179 @@ import RegisterPage from "./pages/auth/RegisterPage";
 import ResetPasswordPage from "./pages/auth/ResetPasswordPage";
 import VerifyEmailPage from "./pages/auth/VerifyEmailPage";
 
+function DashboardIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </svg>
+  );
+}
+
+function TransactionsIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M8 6h13M8 12h13M8 18h13" />
+      <circle cx="4" cy="6" r="1" fill="currentColor" />
+      <circle cx="4" cy="12" r="1" fill="currentColor" />
+      <circle cx="4" cy="18" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function IncomeIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 2v20M17 7l-5-5-5 5" />
+      <path d="M4 20h16" opacity="0.4" />
+    </svg>
+  );
+}
+
+function ExpensesIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22V2M17 17l-5 5-5-5" />
+      <path d="M4 4h16" opacity="0.4" />
+    </svg>
+  );
+}
+
+function InvoicesIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+      <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" />
+    </svg>
+  );
+}
+
+function BusinessesIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="2" y="7" width="20" height="14" rx="2" />
+      <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+    </svg>
+  );
+}
+
+function HistoryIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 6v6l4 2" />
+    </svg>
+  );
+}
+
+function SubscriptionsIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 8v4l3 3" />
+      <circle cx="12" cy="12" r="10" />
+    </svg>
+  );
+}
+
+function ReportsIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 4v16h16" />
+      <path d="M4 20l4.5-5.5 4 4L20 7" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+    </svg>
+  );
+}
+
+function ChevronDown() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  );
+}
+
+const navItems = [
+  { path: "/dashboard", label: "Dashboard", icon: <DashboardIcon />, exact: true },
+  { path: "/dashboard/transactions", label: "Transactions", icon: <TransactionsIcon /> },
+  { path: "/dashboard/income", label: "Income", icon: <IncomeIcon /> },
+  { path: "/dashboard/expenses", label: "Expenses", icon: <ExpensesIcon /> },
+  { path: "/dashboard/invoices", label: "Invoices", icon: <InvoicesIcon /> },
+  { path: "/dashboard/businesses", label: "Businesses", icon: <BusinessesIcon /> },
+  { path: "/dashboard/history", label: "History", icon: <HistoryIcon /> },
+  { path: "/dashboard/subscriptions", label: "Subscriptions", icon: <SubscriptionsIcon /> },
+  { path: "/dashboard/reports", label: "Reports", icon: <ReportsIcon /> },
+];
+
 function Shell({ children }) {
   const { user, businesses, selectBusiness, logout } = useAuth();
   const location = useLocation();
 
-  const isActive = (path) => {
-    if (path === "/dashboard") return location.pathname === "/dashboard";
-    return location.pathname.startsWith(path);
+  const isActive = (item) => {
+    if (item.exact) return location.pathname === item.path;
+    return location.pathname.startsWith(item.path);
   };
 
   return (
     <div className={`app-shell ${user?.plan === "pro" ? "theme-pro" : ""}`}>
       <aside className="sidebar">
         <div className="brand-wordmark">
-          <img src="/logo.png" alt="Nova" style={{ height: 28, width: 28, objectFit: "contain" }} />
+          <img src="/logo.png" alt="Nova" />
           Nova
         </div>
-        {user && <span className="plan">Free — payment coming soon</span>}
-        <select
-          defaultValue={localStorage.getItem("selected_business_id") || ""}
-          onChange={(e) => {
-            selectBusiness(e.target.value);
-            window.location.reload();
-          }}
-        >
-          <option value="" disabled>Select business</option>
-          {businesses.map((b) => (
-            <option key={b.id} value={b.id}>{b.name}</option>
-          ))}
-        </select>
+
+        {businesses.length > 0 ? (
+          <div className="sidebar-select-wrap">
+            <select
+              value={localStorage.getItem("selected_business_id") || businesses[0]?.id || ""}
+              onChange={(e) => {
+                selectBusiness(e.target.value);
+                window.location.reload();
+              }}
+            >
+              {businesses.map((b) => (
+                <option key={b.id} value={b.id}>{b.name}</option>
+              ))}
+            </select>
+            <ChevronDown />
+          </div>
+        ) : (
+          <Link to="/business/setup" className="sidebar-create-business">
+            + Create business
+          </Link>
+        )}
+
         <nav>
-          <Link to="/dashboard" className={isActive("/dashboard") && location.pathname === "/dashboard" ? "active" : ""}>Dashboard</Link>
-          <Link to="/dashboard/transactions" className={isActive("/dashboard/transactions") ? "active" : ""}>Transactions</Link>
-          <Link to="/dashboard/income" className={isActive("/dashboard/income") ? "active" : ""}>Income</Link>
-          <Link to="/dashboard/expenses" className={isActive("/dashboard/expenses") ? "active" : ""}>Expenses</Link>
-          <Link to="/dashboard/invoices" className={isActive("/dashboard/invoices") ? "active" : ""}>Invoices</Link>
-          <Link to="/dashboard/businesses" className={isActive("/dashboard/businesses") ? "active" : ""}>Businesses</Link>
-          <Link to="/dashboard/history" className={isActive("/dashboard/history") ? "active" : ""}>History</Link>
-          <Link to="/dashboard/subscriptions" className={isActive("/dashboard/subscriptions") ? "active" : ""}>Subscriptions</Link>
-          <Link to="/dashboard/reports" className={isActive("/dashboard/reports") ? "active" : ""}>Reports</Link>
+          {navItems.map((item) => (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={isActive(item) ? "active" : ""}
+            >
+              {item.icon}
+              {item.label}
+            </Link>
+          ))}
         </nav>
-        <ThemeToggle />
-        {user && <button onClick={logout} className="btn-secondary" style={{ fontSize: 13, padding: "8px 12px" }}>Log out</button>}
-        <div style={{ fontSize: 11, color: "var(--muted)", textAlign: "center", padding: "12px 0 0", borderTop: "1px solid var(--border)", marginTop: 8 }}>
-          &copy; Nova {new Date().getFullYear()}
+
+        <div className="sidebar-footer">
+          <ThemeToggle />
+          <button onClick={logout} className="sidebar-logout">
+            <LogoutIcon />
+            Log out
+          </button>
+          <div className="sidebar-footer-brand">
+            &copy; Nova {new Date().getFullYear()}
+          </div>
         </div>
       </aside>
       <main className="content">{children}</main>
@@ -88,10 +217,19 @@ function NotFound() {
   );
 }
 
+function AppLoader() {
+  return (
+    <div className="app-loader">
+      <div className="app-loader-spinner" />
+      <p>Loading Nova...</p>
+    </div>
+  );
+}
+
 export default function App() {
   const { user, loading } = useAuth();
 
-  if (loading) return null;
+  if (loading) return <AppLoader />;
 
   return (
     <Routes>

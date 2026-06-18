@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
         <div className="auth-wordmark">Nova</div>
         <h2>Enter reset code</h2>
         <p className="auth-subtitle">
-          We sent a 6-digit code to <strong>{email}</strong>. Enter it below, then set a new password.
+          We sent a 6-digit code to your email. Enter it below, then set a new password.
         </p>
         <form onSubmit={submitCode} className="form-grid">
           <label>
@@ -95,7 +95,7 @@ export default function ForgotPasswordPage() {
                 type={showPw ? "text" : "password"}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                minLength={6}
+                minLength={8}
                 required
                 disabled={submitting}
               />

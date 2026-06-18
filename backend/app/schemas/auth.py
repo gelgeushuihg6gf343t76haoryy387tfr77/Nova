@@ -7,7 +7,7 @@ from app.schemas.common import ORMModel
 
 class RegisterRequest(BaseModel):
     email: EmailStr
-    password: str = Field(min_length=6)
+    password: str = Field(min_length=8)
     full_name: str | None = None
     username: str | None = Field(default=None, min_length=2, max_length=100)
 
@@ -23,7 +23,7 @@ class ForgotPasswordRequest(BaseModel):
 
 class ResetPasswordRequest(BaseModel):
     token: str
-    password: str = Field(min_length=6)
+    password: str = Field(min_length=8)
 
 
 class SendResetCodeRequest(BaseModel):
@@ -33,7 +33,7 @@ class SendResetCodeRequest(BaseModel):
 class ResetWithCodeRequest(BaseModel):
     code: str
     email: EmailStr
-    password: str = Field(min_length=6)
+    password: str = Field(min_length=8)
 
 
 class ClerkLoginRequest(BaseModel):

@@ -7,13 +7,13 @@ class Settings(BaseSettings):
 
     app_name: str = "Nova API"
     app_env: str = "development"
-    app_debug: bool = True
+    app_debug: bool = False
     log_level: str = "INFO"
 
     database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/nova"
-    jwt_secret_key: str = "change-me"
+    jwt_secret_key: str = ""
     jwt_algorithm: str = "HS256"
-    jwt_expires_minutes: int = 60 * 24 * 30
+    jwt_expires_minutes: int = 720
 
     app_base_url: str = "http://localhost:5173"
     cors_origins: str = "http://localhost:5173"
@@ -30,6 +30,13 @@ class Settings(BaseSettings):
 
     clerk_secret_key: str = ""
     clerk_jwt_audience: str = ""
+
+    @field_validator("jwt_secret_key")
+    @classmethod
+    def validate_jwt_secret(cls, value):
+        if not value:
+            raise ValueError("JWT_SECRET_KEY must be set in environment")
+        return value
 
     @field_validator("app_debug", mode="before")
     @classmethod

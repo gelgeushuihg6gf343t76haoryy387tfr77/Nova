@@ -2,24 +2,39 @@ import { useEffect, useMemo, useState } from "react";
 
 import { api } from "../api/client";
 import BubbleCard from "../components/BubbleCard";
+import KpiCard from "../components/KpiCard";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import StatCard from "../components/StatCard";
 import ToastNotification from "../components/ToastNotification";
 import { useAuth } from "../context/AuthContext";
-import { currencySymbolMap, extractCurrencyCode, formatMoneyFromCents } from "../utils/currency";
+import { extractCurrencyCode, formatMoneyFromCents } from "../utils/currency";
 
 const LS_ONBOARD_COMPLETE = "nova_onboarding_complete";
 const LS_ONBOARD_STEP = "nova_onboarding_step";
 const LS_ONBOARD_CSV = "nova_onboarding_csv_uploaded";
 const LS_ONBOARD_DASH = "nova_onboarding_dashboard_seen";
 
+function SparklineUp() {
+  return (
+    <svg width="60" height="24" viewBox="0 0 60 24" fill="none" stroke="var(--success)" strokeWidth="1.5">
+      <path d="M0 22L10 14L20 18L30 6L40 12L50 2L60 4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SparklineDown() {
+  return (
+    <svg width="60" height="24" viewBox="0 0 60 24" fill="none" stroke="var(--danger)" strokeWidth="1.5">
+      <path d="M0 2L10 10L20 6L30 18L40 12L50 22L60 20" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export default function DashboardPage({ readOnly = false }) {
   const { user } = useAuth();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notify, setNotify] = useState(null);
-  const [onboardStep, setOnboardStep] = useState(() => Number(localStorage.getItem(LS_ONBOARD_STEP) || "0"));
-  const [onboardComplete, setOnboardComplete] = useState(() => localStorage.getItem(LS_ONBOARD_COMPLETE) === "1");
 
   const load = async () => {
     try {
@@ -43,8 +58,6 @@ export default function DashboardPage({ readOnly = false }) {
     const nextStep = Math.max(Number(localStorage.getItem(LS_ONBOARD_STEP) || "0"), 4);
     localStorage.setItem(LS_ONBOARD_STEP, String(nextStep));
     localStorage.setItem(LS_ONBOARD_COMPLETE, "1");
-    setOnboardStep(nextStep);
-    setOnboardComplete(true);
   }, [readOnly]);
 
   const checklist = useMemo(() => {
@@ -64,10 +77,18 @@ export default function DashboardPage({ readOnly = false }) {
   const totalSteps = checklist.length;
   const progress = useMemo(() => Math.round((checklist.filter((c) => c.done).length / totalSteps) * 100), [checklist]);
 
+  const trendFor = (key) => {
+    if (!data?.trends?.[key]) return null;
+    const t = data.trends[key];
+    return { direction: t.direction, percentage: t.percentage, label: t.label };
+  };
+
   if (loading) {
     return (
       <div className="dashboard-page">
-        <LoadingSkeleton count={4} />
+        <LoadingSkeleton count={3} variant="stat" />
+        <div style={{ height: 24 }} />
+        <LoadingSkeleton count={2} />
       </div>
     );
   }
@@ -76,18 +97,20 @@ export default function DashboardPage({ readOnly = false }) {
     return (
       <div className="dashboard-page">
         <div className="empty-state-friendly">
+          <div className="empty-state-icon">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-secondary)" strokeWidth="1.5">
+              <path d="M12 2v20M17 7l-5-5-5 5" />
+              <path d="M4 20h16" opacity="0.3" />
+            </svg>
+          </div>
           <h3>Welcome to Nova</h3>
           <p>Your dashboard will light up once you add your first income or expense.</p>
-          <div className="empty-state-cta" style={{ display: "flex", gap: 12, marginTop: 8 }}>
-            <a href="/dashboard/income" className="auth-submit" style={{ width: "auto", padding: "10px 20px" }}>Add income</a>
-            <a href="/dashboard/expenses" className="btn-secondary" style={{ padding: "10px 20px", fontSize: 15, textDecoration: "none" }}>Add expense</a>
+          <div className="empty-state-cta">
+            <a href="/dashboard/income" className="auth-submit" style={{ width: "auto", padding: "10px 20px", display: "inline-block" }}>Add income</a>
+            <a href="/dashboard/expenses" className="btn-secondary" style={{ padding: "10px 20px", fontSize: 15, textDecoration: "none", display: "inline-block" }}>Add expense</a>
           </div>
         </div>
-        <ToastNotification
-          message={notify?.message || ""}
-          tone={notify?.tone || "success"}
-          onClose={() => setNotify(null)}
-        />
+        <ToastNotification message={notify?.message || ""} tone={notify?.tone || "success"} onClose={() => setNotify(null)} />
       </div>
     );
   }
@@ -105,52 +128,59 @@ export default function DashboardPage({ readOnly = false }) {
       </header>
 
       <section className="stats-grid">
-        <StatCard label="Income" amountCents={data.summary.month_income_cents} hint="Last 30 days" />
-        <StatCard label="Expenses" amountCents={data.summary.month_expense_cents} hint="Last 30 days" />
-        <StatCard label="Profit" amountCents={data.summary.month_profit_cents} hint="Income minus expenses" />
+        <StatCard
+          label="Income"
+          amountCents={data.summary.month_income_cents}
+          tone="income"
+          trend={trendFor("income")}
+          hint="Last 30 days"
+        />
+        <StatCard
+          label="Expenses"
+          amountCents={data.summary.month_expense_cents}
+          tone="expense"
+          trend={trendFor("expense")}
+          hint="Last 30 days"
+        />
+        <StatCard
+          label="Profit"
+          amountCents={data.summary.month_profit_cents}
+          tone="profit"
+          trend={trendFor("profit")}
+          hint="Income minus expenses"
+        />
       </section>
 
-      {data.trends ? (
-        <section className="growth-hooks" style={{ marginBottom: 24 }}>
-          {[
-            { key: "income", label: "Income Trend" },
-            { key: "expense", label: "Expense Trend" },
-            { key: "profit", label: "Profit Trend" },
-          ].map((item) => {
-            const trend = data.trends[item.key];
-            const dir = trend?.direction;
-            const arrow = dir === "up" ? "↑" : dir === "down" ? "↓" : "→";
-            const color = dir === "up" ? "var(--success)" : dir === "down" ? "var(--danger)" : "var(--muted)";
-            return (
-              <article key={item.key} className="bubble-card hook-card">
-                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 20, fontWeight: 700, color }}>{arrow}</span>
-                  <h4 style={{ margin: 0, fontSize: 15 }}>{item.label}</h4>
-                </div>
-                <p style={{ fontSize: 13, color: "var(--text-secondary)", margin: 0 }}>
-                  {trend?.label || "No data yet"}
-                </p>
-              </article>
-            );
-          })}
-        </section>
-      ) : null}
-
-      <section className="dashboard-charts">
+      <section className="dashboard-columns">
         <article className="dashboard-month-overview">
           <h3>This month</h3>
           <div className="month-overview-grid">
             <div>
               <p>Total income</p>
               <strong>{formatMoneyFromCents(data.summary.month_income_cents)}</strong>
+              {trendFor("income") && (
+                <span className={`trend-badge ${trendFor("income").direction}`}>
+                  {trendFor("income").direction === "up" ? "↑" : "↓"} {trendFor("income").percentage}%
+                </span>
+              )}
             </div>
             <div>
               <p>Total expenses</p>
               <strong>{formatMoneyFromCents(data.summary.month_expense_cents)}</strong>
+              {trendFor("expense") && (
+                <span className={`trend-badge ${trendFor("expense").direction === "up" ? "down" : "up"}`}>
+                  {trendFor("expense").direction === "up" ? "↓" : "↑"} {trendFor("expense").percentage}%
+                </span>
+              )}
             </div>
             <div>
               <p>Profit</p>
               <strong>{formatMoneyFromCents(data.summary.month_profit_cents)}</strong>
+              {trendFor("profit") && (
+                <span className={`trend-badge ${trendFor("profit").direction}`}>
+                  {trendFor("profit").direction === "up" ? "↑" : "↓"} {trendFor("profit").percentage}%
+                </span>
+              )}
             </div>
           </div>
         </article>
@@ -186,10 +216,14 @@ export default function DashboardPage({ readOnly = false }) {
                 <strong className="accent-gold">{formatMoneyFromCents(data.insights.week_expense_cents)}</strong>{" "}
                 vs{" "}
                 <strong>{formatMoneyFromCents(data.insights.prev_week_expense_cents)}</strong>).
+                {data.insights.week_expense_cents > data.insights.prev_week_expense_cents ? (
+                  <span className="trend-badge down" style={{ marginLeft: 8, marginTop: 0 }}>↑ spending</span>
+                ) : null}
               </li>
             ) : (
               <li>
                 Last 7 days spending is down vs the prior 7 days — keep it up or review categories for detail.
+                <span className="trend-badge up" style={{ marginLeft: 8, marginTop: 0 }}>↓ spending</span>
               </li>
             )}
             {data.insights.top_expense_category_name ? (
@@ -206,36 +240,22 @@ export default function DashboardPage({ readOnly = false }) {
       ) : null}
 
       <section className="dashboard-secondary-stats">
-        <article className="mini-stat">
-          <p>Unpaid invoices</p>
-          <strong>{formatMoneyFromCents(data.summary.unpaid_invoice_cents)}</strong>
-          <span>{data.summary.unpaid_invoice_count} open</span>
-        </article>
-        <article className="mini-stat">
-          <p>Subscriptions</p>
-          <strong>{formatMoneyFromCents(data.summary.upcoming_subscription_cents)}</strong>
-          <span>Expected billing this period</span>
-        </article>
+        <KpiCard
+          label="Unpaid invoices"
+          amountCents={data.summary.unpaid_invoice_cents}
+          trend={data.summary.unpaid_invoice_count > 0 ? { direction: "flat", label: `${data.summary.unpaid_invoice_count} open` } : null}
+        />
+        <KpiCard
+          label="Subscriptions"
+          amountCents={data.summary.upcoming_subscription_cents}
+          trend={data.summary.upcoming_subscription_cents > 0 ? { direction: "flat", label: "Expected billing" } : null}
+        />
       </section>
 
-      <section className="growth-hooks" style={{ gridTemplateColumns: "minmax(300px, 500px)" }}>
-        <article className="bubble-card hook-card">
-          <h4>{onboardComplete ? "Onboarding complete" : "Getting started"}</h4>
-          <p>Progress: {progress}% ({checklist.filter((c) => c.done).length}/{totalSteps})</p>
-          <ul className="checklist">
-            {checklist.map((item) => (
-              <li key={item.label} className={item.done ? "done" : ""}>
-                {item.label}
-              </li>
-            ))}
-          </ul>
-        </article>
-      </section>
-
-      <section className="dashboard-recent-activity">
+      <section className="dashboard-section">
         <h3>Recent activity</h3>
         {!data.recent_activity?.length ? (
-          <p className="empty-state">No income or expense activity in the last 30 days.</p>
+          <p className="empty-state" style={{ marginTop: 8 }}>No income or expense activity in the last 30 days.</p>
         ) : (
           <div className="bubble-grid">
             {data.recent_activity.map((item) => (
@@ -331,17 +351,27 @@ export default function DashboardPage({ readOnly = false }) {
         </div>
       </section>
 
+      <section className="growth-hooks" style={{ gridTemplateColumns: "minmax(300px, 500px)" }}>
+        <article className="bubble-card hook-card">
+          <h4>Getting started</h4>
+          <p>Progress: {progress}% ({checklist.filter((c) => c.done).length}/{totalSteps})</p>
+          <ul className="checklist">
+            {checklist.map((item) => (
+              <li key={item.label} className={item.done ? "done" : ""}>
+                {item.label}
+              </li>
+            ))}
+          </ul>
+        </article>
+      </section>
+
       <div className="dashboard-footer-actions">
         <button type="button" className="btn-secondary" onClick={() => { load(); setNotify({ message: "Dashboard refreshed", tone: "success" }); }}>
           Refresh
         </button>
       </div>
 
-      <ToastNotification
-        message={notify?.message || ""}
-        tone={notify?.tone || "success"}
-        onClose={() => setNotify(null)}
-      />
+      <ToastNotification message={notify?.message || ""} tone={notify?.tone || "success"} onClose={() => setNotify(null)} />
     </div>
   );
 }
