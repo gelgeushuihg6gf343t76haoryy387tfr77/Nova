@@ -96,6 +96,7 @@ export default function RegisterPage() {
               {showPw ? "Hide" : "Show"}
             </button>
           </span>
+          <small className="field-hint">Minimum 8 characters</small>
         </label>
         <button type="submit" disabled={submitting} style={{ width: "100%", marginTop: 4 }}>
           {submitting ? "Creating account…" : "Create account"}

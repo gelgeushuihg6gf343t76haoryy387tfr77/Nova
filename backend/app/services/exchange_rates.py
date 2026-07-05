@@ -112,7 +112,9 @@ class ExchangeRateService:
             return amount_cents, 1.0
 
         rate = self.get_rate(db, from_currency, to_currency, rate_date)
-        converted = round(amount_cents / rate) if rate > 0 else amount_cents
+        if rate <= 0:
+            return amount_cents, 1.0
+        converted = round(amount_cents * rate)
         return converted, rate
 
     def _refresh_rates(self, db: Session, base_currency: str = "USD") -> None:
@@ -153,9 +155,9 @@ class ExchangeRateService:
     def _fallback_rate(self, from_currency: str, to_currency: str) -> float:
         from_rate = FALLBACK_RATES.get(from_currency.upper(), 1.0)
         to_rate = FALLBACK_RATES.get(to_currency.upper(), 1.0)
-        if to_rate == 0:
+        if from_rate <= 0:
             return 1.0
-        return from_rate / to_rate
+        return to_rate / from_rate
 
 
 exchange_service = ExchangeRateService()

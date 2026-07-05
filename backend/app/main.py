@@ -19,7 +19,14 @@ logger = logging.getLogger("nova")
 
 app = FastAPI(title="Nova API", version="1.4.0", debug=settings.app_debug)
 app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+async def rate_limit_json_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return JSONResponse(
+        status_code=429,
+        content={"error": "rate_limited", "detail": "Too many requests. Please wait and try again."},
+    )
+
+app.add_exception_handler(RateLimitExceeded, rate_limit_json_handler)
 
 
 @app.on_event("startup")
